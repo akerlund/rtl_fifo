@@ -1,0 +1,155 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright (C) 2026 Fredrik Åkerlund
+// https://github.com/akerlund/rtl_fifo
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Description:
+// bind_fifo_register
+//
+// The property module bound into every fifo_register instance by sva_top.sva.
+// It sees the internal pointers and enables as well as the ports, which is
+// what lets it check the pointer arithmetic rather than only the interface.
+//
+// Covers the reset state, the full and empty conditions in both directions
+// (the flag asserting when it should and clearing when it should), and that a
+// write to a full FIFO and a read from an empty one change neither the
+// pointers nor the contents.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+module bind_fifo_register #(
+    parameter int DATA_WIDTH_P = -1,
+    parameter int ADDR_WIDTH_P = -1
+  )(
+    input  wire                      clk,
+    input  wire                      rst_n,
+    input  wire                      ing_enable,
+    input  wire [DATA_WIDTH_P-1 : 0] ing_data,
+    input  wire                      ing_full,
+    input  wire                      egr_enable,
+    input  wire [DATA_WIDTH_P-1 : 0] egr_data,
+    input  wire                      egr_empty,
+    input  wire   [ADDR_WIDTH_P : 0] sr_fill_level,
+    input  wire                      write_enable,
+    input  wire [ADDR_WIDTH_P-1 : 0] write_address,
+    input  wire                      read_enable,
+    input  wire [ADDR_WIDTH_P-1 : 0] read_address
+  );
+
+  localparam logic [ADDR_WIDTH_P : 0] FIFO_MAX_LEVEL_C = 2**ADDR_WIDTH_P;
+
+  // Asynchronous reset property:
+  /* verilator lint_off SYNCASYNCNET */
+  property pr_reset_rptr0_wptr0_empty1_full0_cnt0;
+    @(posedge clk)
+      ($past(rst_n) == 0 && rst_n |->
+      ($past(read_address) == 0 && $past(write_address) == 0 && $past(egr_empty) == 1 && $past(ing_full) == 0 && $past(sr_fill_level) == 0));
+  endproperty
+  /* verilator lint_on SYNCASYNCNET */
+
+  // FIFO full condition properties:
+  property pr_full_fifo_condition;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level > FIFO_MAX_LEVEL_C-1 |-> ing_full);
+  endproperty
+
+  property pr_not_full_fifo_condition;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level < FIFO_MAX_LEVEL_C |-> !ing_full);
+  endproperty
+
+  property pr_fifo_should_go_full;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level == FIFO_MAX_LEVEL_C-1 && ing_enable && !egr_enable |=> ing_full);
+  endproperty
+
+  property pr_full_write_full;
+    @(posedge clk) disable iff (!rst_n)
+      (ing_full && ing_enable && !egr_enable |=> ing_full);
+  endproperty
+
+  property pr_full_write_wptr_no_change;
+    @(posedge clk) disable iff (!rst_n)
+      (ing_full && ing_enable && !egr_enable |=> $stable(write_address));
+  endproperty
+
+  // FIFO empty condition properties:
+  property pr_empty_fifo_condition;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level == 0 |-> egr_empty);
+  endproperty
+
+  property pr_not_empty_fifo_condition;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level > 0 |-> !egr_empty);
+  endproperty
+
+  property pr_fifo_should_go_empty;
+    @(posedge clk) disable iff (!rst_n)
+      (sr_fill_level == 1 && egr_enable && !ing_enable |=> egr_empty);
+  endproperty
+
+  property pr_empty_read_empty;
+    @(posedge clk) disable iff (!rst_n)
+      (egr_empty && egr_enable && !ing_enable |=> egr_empty);
+  endproperty
+
+  property pr_empty_read_rptr_no_change;
+    @(posedge clk) disable iff (!rst_n)
+      (egr_empty && egr_enable && !ing_enable |=> $stable(read_address));
+  endproperty
+
+  // Asynchronous reset assertion:
+  ERROR_FIFO_RESET_SHOULD_CAUSE_EMPTY1_FULL0_RPTR0_WPTR0_CNT0:
+    assert property (pr_reset_rptr0_wptr0_empty1_full0_cnt0);
+
+  // FIFO full condition assertions:
+  ERROR_FIFO_SHOULD_BE_FULL:
+    assert property (pr_full_fifo_condition);
+
+  ERROR_FIFO_SHOULD_NOT_BE_FULL:
+    assert property (pr_not_full_fifo_condition);
+
+  ERROR_FIFO_DID_NOT_GO_FULL:
+    assert property (pr_fifo_should_go_full);
+
+  ERROR_FIFO_FULL__WRITE_CAUSED_FULL_FLAG_TO_CHANGE:
+    assert property (pr_full_write_full);
+
+  ERROR_FIFO_FULL__WRITE_CAUSED_WPTR_TO_CHANGE:
+    assert property (pr_full_write_wptr_no_change);
+
+  // FIFO empty condition assertions:
+  ERROR_FIFO_SHOULD_BE_EMPTY:
+    assert property (pr_empty_fifo_condition);
+
+  ERROR_FIFO_SHOULD_NOT_BE_EMPTY:
+    assert property (pr_not_empty_fifo_condition);
+
+  ERROR_FIFO_DID_NOT_GO_EMPTY:
+    assert property (pr_fifo_should_go_empty);
+
+  ERROR_FIFO_EMPTY__READ_CAUSED_EMPTY_FLAG_TO_CHANGE:
+    assert property (pr_empty_read_empty);
+
+  ERROR_FIFO_EMPTY__READ_CAUSED_RPTR_TO_CHANGE:
+    assert property (pr_empty_read_rptr_no_change);
+endmodule

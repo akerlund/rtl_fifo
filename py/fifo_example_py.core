@@ -1,0 +1,38 @@
+CAPI=2:
+name: "akerlund::fifo_example_py:0"
+description: "Synchronous FIFO - pyUVM/cocotb flow"
+
+filesets:
+  tb:
+    files:
+      - tb/fifo_hdl_top.sv
+    file_type: systemVerilogSource
+    depend:
+      - "akerlund::fifo:1.0.0"
+
+targets:
+  default: &default
+    flow: sim
+    flow_options:
+      tool: verilator
+    filesets:
+      - tb
+    toplevel: fifo_hdl_top
+
+  lint:
+    <<: *default
+    flow: lint
+    flow_options:
+      tool: verilator
+      verilator_options:
+        - -Wno-fatal
+
+  sim:
+    <<: *default
+    flow_options:
+      tool: verilator
+      cocotb_module: fifo_tb_top
+      mode: cc
+      verilator_options:
+        - -Wno-fatal
+        - --public-flat-rw

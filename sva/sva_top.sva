@@ -1,0 +1,54 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright (C) 2026 Fredrik Åkerlund
+// https://github.com/akerlund/rtl_fifo
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Description:
+// sva_top
+//
+// The bind statement that attaches bind_fifo_register to fifo_register.
+//
+// It binds by MODULE NAME, so every fifo_register in the elaborated design is
+// checked, including the one instantiated inside fifo and any in other
+// modules. Kept separate from the property module so a testbench can compile
+// the properties without binding them.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+bind fifo_register
+  bind_fifo_register #(
+    .DATA_WIDTH_P  ( DATA_WIDTH_P  ),
+    .ADDR_WIDTH_P  ( ADDR_WIDTH_P  )
+  ) bind_fifo_register_b0 (
+    .clk           ( clk           ),
+    .rst_n         ( rst_n         ),
+    .ing_enable    ( ing_enable    ),
+    .ing_data      ( ing_data      ),
+    .ing_full      ( ing_full      ),
+    .egr_enable    ( egr_enable    ),
+    .egr_data      ( egr_data      ),
+    .egr_empty     ( egr_empty     ),
+    .sr_fill_level ( sr_fill_level ),
+    .write_enable  ( write_enable  ),
+    .write_address ( write_address ),
+    .read_enable   ( read_enable   ),
+    .read_address  ( read_address  )
+  );

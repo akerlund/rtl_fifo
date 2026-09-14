@@ -1,0 +1,3 @@
+[submodule "submodules/rtl_common"]
+	path = submodules/rtl_common
+	url = git@github.com:akerlund/rtl_common.git
