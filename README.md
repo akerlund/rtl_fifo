@@ -1,8 +1,9 @@
 # Synchronous FIFO
 
-![Test  Status](https://img.shields.io/badge/test-passing-green)
-![Synth Status](https://img.shields.io/badge/synthesis-N/A-lightgrey)
-![FPGA  Status](https://img.shields.io/badge/fpga-N/A-lightgrey)
+![Verilator](https://img.shields.io/badge/Verilator-5.050-brightgreen)
+![cocotb](https://img.shields.io/badge/cocotb-2.0.1-brightgreen)
+![pyUVM](https://img.shields.io/badge/pyUVM-4.0.1-brightgreen)
+![FuseSoC](https://img.shields.io/badge/FuseSoC-2.4.6-brightgreen)
 
 A single-clock-domain FIFO parameterised on data width and depth. It picks its
 own storage: small FIFOs become a register file, larger ones a RAM, and the
