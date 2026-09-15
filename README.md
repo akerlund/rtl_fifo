@@ -84,13 +84,36 @@ fifo #(
 
 ![Register-backed FIFO waveform](.pictures/reg_fifo.JPG)
 
-## Running
+## Building
+
+Every tool this core is built and run with, and how to reach each one.
+
+### refuse
+
+[refuse](https://github.com/akerlund/refuse) wraps FuseSoC and adds the
+synthesis and place-and-route flows. It finds the git root and the nearest
+`.core` itself, and keeps output under `rundir/<tool>`.
+
+```sh
+refuse yosys    --target rtl     # standard-cell synthesis  -> rundir/yosys
+refuse openroad --target rtl     # place and route          -> rundir/openroad
+```
+
+Both run here as-is; results in [ASIC flow](#asic-flow) below.
+
+`refuse verilator` expects Verilator profiles in a `.refuse.yml`, which this
+repository does not carry -- use the FuseSoC entry point below for the cocotb
+regression. There is no SystemVerilog testbench here, so nothing for
+`refuse vcs` to build.
+
+### FuseSoC
 
 ```sh
 cd py
 ./run_fusesoc.sh --target sim     # cocotb/Verilator
 ./run_fusesoc.sh --target lint
 fusesoc run --target rtl akerlund::fifo:1.0.0    # lint the RTL alone
+fusesoc run --target sva akerlund::fifo:1.0.0    # RTL plus the bound properties
 ```
 
 [`sva/`](sva/) binds 37 properties to `fifo_register` by module name, so every
