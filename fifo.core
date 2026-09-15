@@ -33,7 +33,17 @@ parameters:
     paramtype: vlogparam
 
 targets:
+  # What a dependent core gets. RTL only: the SVA is not synthesizable, and
+  # anything depending on this core would otherwise carry the assertions into
+  # its own synthesis. Yosys rejects them outright ("SVA unsupported"), so a
+  # downstream ASIC flow fails on properties it never asked for.
   default:
+    filesets:
+      - rtl
+
+  # RTL plus the bound properties, for a formal or assertion-enabled run.
+  # Verilator needs --assert to evaluate them.
+  sva:
     filesets:
       - rtl
       - sva
