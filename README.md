@@ -1,10 +1,9 @@
 # Synchronous FIFO
 
-![Verilator](https://img.shields.io/badge/Verilator-5.050-brightgreen)
-![cocotb](https://img.shields.io/badge/cocotb-2.0.1-brightgreen)
-![pyUVM](https://img.shields.io/badge/pyUVM-4.0.1-brightgreen)
-![FuseSoC](https://img.shields.io/badge/FuseSoC-2.4.6-brightgreen)
-
+![Verilator](https://img.shields.io/badge/Verilator-5.050-green)
+![cocotb](https://img.shields.io/badge/cocotb-2.0.1-green)
+![pyUVM](https://img.shields.io/badge/pyUVM-4.0.1-green)
+![FuseSoC](https://img.shields.io/badge/FuseSoC-2.4.6-blue)
 A single-clock-domain FIFO parameterised on data width and depth. It picks its
 own storage: small FIFOs become a register file, larger ones a RAM, and the
 interface is identical either way.
