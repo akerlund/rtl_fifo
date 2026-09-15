@@ -91,5 +91,8 @@ cd py
 fusesoc run --target rtl akerlund::fifo:1.0.0    # lint the RTL alone
 ```
 
-There are also formal scripts under [`scripts/`](scripts/) and SVA under
-[`sva/`](sva/), which bind properties to `fifo_register`.
+[`sva/`](sva/) binds 37 properties to `fifo_register` by module name, so every
+instance in an elaborated design is checked -- including the one inside `fifo`.
+They cover the reset state, the full and empty conditions in both directions,
+and that a write to a full FIFO or a read from an empty one changes neither the
+pointers nor the contents.
