@@ -97,4 +97,30 @@ fusesoc run --target rtl akerlund::fifo:1.0.0    # lint the RTL alone
 instance in an elaborated design is checked -- including the one inside `fifo`.
 They cover the reset state, the full and empty conditions in both directions,
 and that a write to a full FIFO or a read from an empty one changes neither the
-pointers nor the contents.
+pointers nor the contents. They are in the `sva` target rather than `default`,
+so a core depending on this one does not carry them into its own synthesis.
+
+## ASIC flow
+
+Synthesis and place-and-route with the open-source tools, through
+[refuse](https://github.com/akerlund/refuse):
+
+```sh
+refuse yosys    --target rtl     # map onto standard cells
+refuse openroad --target rtl     # place and route the netlist
+```
+
+On sky130hd at the core's default parameters:
+
+| | |
+|---|---|
+| Standard cells | 598 |
+| Cell area | 10132 µm² (79% sequential) |
+| Design area after P&R | 12185 µm², 49% utilisation |
+| Setup slack | 5.58 ns |
+| Hold slack | 0.61 ns |
+| Total power | 3.87 mW |
+| Route violations | **0** |
+
+Mostly flip-flops, which is what a FIFO should be: the storage dominates and
+the control logic around it is small.
